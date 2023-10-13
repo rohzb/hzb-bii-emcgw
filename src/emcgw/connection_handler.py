@@ -69,10 +69,11 @@ class ConnectionHandler:
             except (socket.error, ConnectionResetError):
                 logging.warning("Socket connection closed.")
                 break
-
-        self.stop_event.set()  # Signal thread termination
-        logging.warning(f"Closing connection {src.getsockname()[0]},{src.getsockname()[1]}!")
-        src.close()
-        logging.warning(f"Closing connection {dst.getsockname()[0]},{dst.getsockname()[1]}!")
-        dst.close()
+            
+        if not self.stop_event.is_set():
+          self.stop_event.set()  # Signal thread termination
+          logging.info(f"Closing connection {src.getsockname()[0]},{src.getsockname()[1]}!")
+          src.close()
+          logging.info(f"Closing connection {dst.getsockname()[0]},{dst.getsockname()[1]}!")
+          dst.close()
     
