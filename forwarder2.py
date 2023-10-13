@@ -5,11 +5,31 @@ import logging
 import yaml
 
 class ConnectionHandler:
+    """
+    Handles data transfer between two sockets and logs the data flow.
+    """
     def __init__(self, src_socket, dst_socket):
+        """
+        Initialize a ConnectionHandler instance.
+
+        Args:
+            src_socket (socket.socket): The source socket for data transfer.
+            dst_socket (socket.socket): The destination socket for data transfer.
+        """
         self.src_socket = src_socket
         self.dst_socket = dst_socket
 
-    def handle(self, buffer: bytes, direction: bool):
+    def handle(self, buffer: bytes, direction: bool) -> bytes:
+        """
+        Handle data and log the data flow information.
+
+        Args:
+            buffer (bytes): The data buffer to handle.
+            direction (bool): The direction of data flow (True for outgoing, False for incoming).
+
+        Returns:
+            bytes: The processed data buffer.
+        """
         src_address, src_port = self.src_socket.getsockname()
         dst_address, dst_port = self.dst_socket.getsockname()
 
@@ -21,6 +41,9 @@ class ConnectionHandler:
         return buffer
 
     def start_transfer(self):
+        """
+        Start data transfer threads for both directions.
+        """
         src_address, src_port = self.src_socket.getsockname()
         dst_address, dst_port = self.dst_socket.getsockname()
 
@@ -30,6 +53,14 @@ class ConnectionHandler:
         r.start()
 
     def transfer(self, src, dst, direction: bool):
+        """
+        Transfer data between two sockets in a given direction.
+
+        Args:
+            src (socket.socket): The source socket.
+            dst (socket.socket): The destination socket.
+            direction (bool): The direction of data flow (True for outgoing, False for incoming).
+        """
         while True:
             try:
                 buffer = src.recv(4096)
@@ -43,13 +74,28 @@ class ConnectionHandler:
         dst.close()
 
 class Server:
+    """
+    Represents a server that listens on a given port and forwards connections to a remote host and port.
+    """
     def __init__(self, local_host, local_port, remote_host, remote_port):
+        """
+        Initialize a Server instance.
+
+        Args:
+            local_host (str): The host to listen on.
+            local_port (int): The port to bind to.
+            remote_host (str): The target host to connect to.
+            remote_port (int): The target port to connect to.
+        """
         self.local_host = local_host
         self.local_port = local_port
         self.remote_host = remote_host
         self.remote_port = remote_port
 
     def start(self):
+        """
+        Start the server, listen for incoming connections, and handle data transfer.
+        """
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server_socket.bind((self.local_host, self.local_port))
@@ -72,6 +118,9 @@ class Server:
                 logging.error(repr(e))
 
 def main():
+    """
+    Main function to parse command-line arguments, configure logging, and start the server.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--config", help="Path to YAML config file")
     parser.add_argument("-l", "--listen-host", help="The host to listen on")
@@ -80,15 +129,11 @@ def main():
     parser.add_argument("-P", "--connect-port", type=int, help="The target port to connect to")
     parser.add_argument("-L", "--log-level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], help="Set logging level")
     parser.add_argument("-v", dest="verbosity", action="count", default=0, help="Increase verbosity level (-v for INFO, -vv for DEBUG, -vvv for TRACE)")
-    #parser.add_argument("-h", "--help", action="store_true", help="Show this help message and exit")
 
     args = parser.parse_args()
     config = {}
 
-    # if args.help:
-    #     parser.print_help()
-    #     return
-
+    # read optional config file
     if args.config:
         with open(args.config, "r") as f:
             config = yaml.safe_load(f)
@@ -111,10 +156,14 @@ def main():
     elif args.verbosity >= 3:
         log_level = "TRACE"
 
+    # Define a custom TRACE log level
     logging.addLevelName('TRACE', logging.DEBUG - 5)
     setattr(logging, 'TRACE', logging.DEBUG - 5)
+    
+    # Configure logging
     logging.basicConfig(level=getattr(logging, log_level), format='%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s: %(message)s')
 
+    # Start the server
     server = Server(config["listen_host"], config["listen_port"], config["connect_host"], config["connect_port"])
     server.start()
 
