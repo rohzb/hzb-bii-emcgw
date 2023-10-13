@@ -1,0 +1,21 @@
+# Virtual environment
+.venv/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# pakcage installation
+*.egg-info/
+
+# special/local paths
+local/
+localonly/
+/test.ipynb
+
+# code coverage 
+.coverage
+
+# Jupyter
+.ipynb_checkpoints
