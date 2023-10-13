@@ -1,0 +1,41 @@
+2023-10-13 08:23:11,308 - forwarder2.py:108 - INFO: Server started on localhost:8080
+2023-10-13 08:23:11,308 - forwarder2.py:109 - INFO: Connect to localhost:8080 to access bii-hermes.devx.bessy.de:22
+2023-10-13 08:23:15,564 - forwarder2.py:113 - INFO: [Establishing connection] 127.0.0.1 -> localhost:8080 -> ? -> bii-hermes.devx.bessy.de:22
+2023-10-13 08:23:15,598 - forwarder2.py:118 - INFO: [OK] 127.0.0.1 -> localhost:8080 -> ('172.17.0.3', 32770) -> bii-hermes.devx.bessy.de:22
+2023-10-13 08:23:24,781 - forwarder2.py:76 - WARNING: Closing connection 127.0.0.1,8080!
+2023-10-13 08:23:24,782 - forwarder2.py:78 - WARNING: Closing connection 172.17.0.3,32770!
+Exception in thread Thread-1 (transfer):
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/threading.py", line 1016, in _bootstrap_inner
+    self.run()
+  File "/usr/lib/python3.10/threading.py", line 953, in run
+    self._target(*self._args, **self._kwargs)
+  File "/workspaces/hzb-bii-emcgw/forwarder2.py", line 76, in transfer
+    logging.warning(f"Closing connection {src.getsockname()[0]},{src.getsockname()[1]}!")
+OSError: [Errno 9] Bad file descriptor
+2023-10-13 08:33:03,653 - forwarder2.py:113 - INFO: [Establishing connection] 127.0.0.1 -> localhost:8080 -> ? -> bii-hermes.devx.bessy.de:22
+2023-10-13 08:33:03,660 - forwarder2.py:118 - INFO: [OK] 127.0.0.1 -> localhost:8080 -> ('172.17.0.3', 59628) -> bii-hermes.devx.bessy.de:22
+2023-10-13 08:33:05,415 - forwarder2.py:76 - WARNING: Closing connection 127.0.0.1,8080!
+2023-10-13 08:33:05,416 - forwarder2.py:78 - WARNING: Closing connection 172.17.0.3,59628!
+2023-10-13 08:33:13,903 - forwarder2.py:113 - INFO: [Establishing connection] 127.0.0.1 -> localhost:8080 -> ? -> bii-hermes.devx.bessy.de:22
+2023-10-13 08:33:13,914 - forwarder2.py:118 - INFO: [OK] 127.0.0.1 -> localhost:8080 -> ('172.17.0.3', 60046) -> bii-hermes.devx.bessy.de:22
+2023-10-13 08:33:19,349 - forwarder2.py:76 - WARNING: Closing connection 127.0.0.1,8080!
+2023-10-13 08:33:19,352 - forwarder2.py:78 - WARNING: Closing connection 172.17.0.3,60046!
+Exception in thread Thread-5 (transfer):
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/threading.py", line 1016, in _bootstrap_inner
+    self.run()
+  File "/usr/lib/python3.10/threading.py", line 953, in run
+    self._target(*self._args, **self._kwargs)
+  File "/workspaces/hzb-bii-emcgw/forwarder2.py", line 76, in transfer
+    logging.warning(f"Closing connection {src.getsockname()[0]},{src.getsockname()[1]}!")
+OSError: [Errno 9] Bad file descriptor
+Exception in thread Thread-3 (transfer):
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/threading.py", line 1016, in _bootstrap_inner
+    self.run()
+  File "/usr/lib/python3.10/threading.py", line 953, in run
+    self._target(*self._args, **self._kwargs)
+  File "/workspaces/hzb-bii-emcgw/forwarder2.py", line 76, in transfer
+    logging.warning(f"Closing connection {src.getsockname()[0]},{src.getsockname()[1]}!")
+OSError: [Errno 9] Bad file descriptor
