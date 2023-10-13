@@ -1,0 +1,26 @@
+server:
+  # address to lsiten at. Defautls to 0.0.0.0
+  address: 127.0.0.1
+  # port to listen at, Defaults to XXXXX
+  port: 3412
+
+remote:
+  device: pm4
+  mode: tcp # tcp, epics or serial
+  tcp: # formward to TCP connection
+    address: 127.0.0.1
+    port: 123123
+  epics: # settings for the epics communication
+    prefix: d0812pgm1
+    map: mono_std.yaml
+  serial: # setting for the serial communication
+    device: /dev/ttyUSB12
+    speed: 19200
+    parity: none
+
+devices: # alternativly list of devices with the same settings
+  pm4:
+    # mode: epics # mode can be skoiped if there is only one mode defined
+    epics:
+      prefix: d0812pgm1
+      map: mono_std.yaml
