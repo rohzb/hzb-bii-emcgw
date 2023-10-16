@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/base:ubuntu as base
+FROM mcr.microsoft.com/devcontainers/base:ubuntu AS base
 
 # Update packages
 RUN apt-get update \
@@ -7,9 +7,10 @@ RUN apt-get update \
 RUN apt-get install -y \
         host \
         vim \
-        mc
+        mc \
+        bash-completion
 
-FROM base as python3.10
+FROM base AS python3.10
 RUN apt-get install -y python3.10 python3-pip python3-venv
 
 #FROM python3.10 as ansible
