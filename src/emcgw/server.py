@@ -6,7 +6,7 @@ class Server:
     """
     Represents a server that listens on a given port and forwards connections to a remote host and port.
     """
-    def __init__(self, local_host, local_port, remote_host, remote_port):
+    def __init__(self, local_host, local_port, remote_host, remote_port, access_list=None):
         """
         Initialize a Server instance.
 
@@ -15,11 +15,28 @@ class Server:
             local_port (int): The port to bind to.
             remote_host (str): The target host to connect to.
             remote_port (int): The target port to connect to.
+            access_list (list): Optional list of allowed client IP addresses.
         """
         self.local_host = local_host
         self.local_port = local_port
         self.remote_host = remote_host
         self.remote_port = remote_port
+        self.access_list = access_list
+
+    def is_client_allowed(self, client_address):
+        """
+        Check if the client's IP address is allowed based on the access list.
+
+        Args:
+            client_address (str): The client's IP address.
+
+        Returns:
+            bool: True if the client is allowed, False otherwise.
+        """
+        if not self.access_list:
+            return True  # No access list, allow all clients
+
+        return client_address in self.access_list
 
     def start(self):
         """
@@ -34,6 +51,12 @@ class Server:
 
         while True:
             src_socket, src_address = server_socket.accept()
+
+            if not self.is_client_allowed(src_address[0]):
+                logging.warning(f"Connection from {src_address[0]} denied (not in access list).")
+                src_socket.close()
+                continue
+
             logging.info(f"[Establishing connection] {src_address[0]} -> {self.local_host}:{self.local_port} -> ? -> {self.remote_host}:{self.remote_port}")
 
             try:
