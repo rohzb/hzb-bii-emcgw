@@ -3,77 +3,62 @@ import logging
 from .connection_handler import ConnectionHandler
 import ipaddress
 
+import socket
+import ipaddress
+import logging
+from typing import List, Union
+
 class AccessList:
-    def __init__(self, allowed_clients=None):
+    def __init__(self, allowed_clients: Union[List[str], 'AccessList'] = None) -> None:
         """
         Initialize an AccessList instance.
 
         Args:
-            allowed_clients (list): Optional list of allowed client specifications. Client specifications can include
-            individual IPs, IP ranges (in CIDR notation), or hostnames.
+            allowed_clients (list or AccessList): Optional list of allowed client specifications or an existing
+            AccessList instance.
 
         Example allowed_clients lists:
         - ["192.168.1.1", "192.168.2.0/24", "example.com"]
         - ["10.0.0.0/8"]
         """
-        self.allowed_clients = self.parse_allowed_clients(allowed_clients)
+        if isinstance(allowed_clients, AccessList):
+            self.allowed_clients = allowed_clients.allowed_clients.copy()
+        elif isinstance(allowed_clients, list):
+            self.allowed_clients = self.parse_allowed_clients(allowed_clients)
+        elif allowed_clients is None:
+            self.allowed_clients = set()
 
-    def parse_allowed_clients(self, allowed_clients):
-        """
-        Parse allowed client specifications and store them as network objects.
-
-        Args:
-            allowed_clients (list): List of client specifications, which can include individual IPs, IP ranges, or hostnames.
-
-        Returns:
-            list: List of IP network objects (ipaddress.IPv4Network or ipaddress.IPv6Network).
-        """
-        parsed_clients = []
-
-        if allowed_clients is None:
-            return parsed_clients
-
+    def parse_allowed_clients(self, allowed_clients: List[str]) -> set:
+        parsed_clients = set()
         for client_spec in allowed_clients:
-            if '/' in client_spec:  # Assuming CIDR notation
+            try:
+                # Check if it's an IP address
+                ip = ipaddress.IPv4Address(client_spec)
+                parsed_clients.add(ip)
+            except ipaddress.AddressValueError:
                 try:
-                    network = ipaddress.ip_network(client_spec, strict=False)
-                    parsed_clients.append(network)
-                except ValueError:
-                    # Invalid CIDR notation, log a warning
-                    logging.warning(f"Invalid CIDR notation: {client_spec}")
-            else:
-                try:
-                    address = ipaddress.ip_address(client_spec)
-                    # Add the network corresponding to the single IP address
-                    parsed_clients.append(ipaddress.ip_network(address))
-                except ValueError:
-                    # Client specification is not a valid IP address, assuming it's a hostname
-                    try:
-                        ip_address = ipaddress.ip_network(socket.gethostbyname(client_spec))
-                        parsed_clients.append(ip_address)
-                    except (socket.gaierror, ValueError):
-                        # Invalid hostname or IP address, log a warning
-                        logging.warning(f"Cannot parse client specification: {client_spec}")
-
+                    # Check if it's a network
+                    network = ipaddress.IPv4Network(client_spec, strict=False)
+                    parsed_clients.add(network)
+                except ipaddress.NetmaskValueError:
+                    # It might be a hostname or an invalid entry
+                    # Log a warning for an invalid client spec
+                    logging.warning(f"Invalid client spec: {client_spec}")
         return parsed_clients
 
-    def is_client_allowed(self, client_address):
-        """
-        Check if the client's IP address is allowed based on the access list.
-
-        Args:
-            client_address (str): The client's IP address.
-
-        Returns:
-            bool: True if the client is allowed, False otherwise.
-        """
-        ip_address = ipaddress.ip_address(client_address)
-
-        for allowed_network in self.allowed_clients:
-            if ip_address in allowed_network:
-                return True
-
-        return False
+    def is_allowed(self, client_address: str) -> bool:
+        try:
+            client_ip = ipaddress.IPv4Address(client_address)
+            for allowed in self.allowed_clients:
+                if isinstance(allowed, ipaddress.IPv4Network) and client_ip in allowed:
+                    return True
+                elif client_ip == allowed:
+                    return True
+            return False
+        except ipaddress.AddressValueError:
+            # Log a warning for an invalid client address
+            logging.warning(f"Invalid client address: {client_address}")
+            return False
 
 class Server:
     """
@@ -111,7 +96,7 @@ class Server:
             return True  # No access list, allow all clients
 
         #return client_address in self.access_list
-        return self.access_list.is_client_allowed(client_address)
+        return self.access_list.is_allowed(client_address)
 
     def start(self):
         """
