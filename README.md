@@ -65,6 +65,64 @@ The server will read the configuration settings from the YAML file, including th
 
 These examples demonstrate how to run and configure the `emcgw` server, either via command-line arguments or a YAML configuration file.
 
+### Example 4: Using Allowed and Denied Clients with "Deny-First" Access Order and Two Config Files
+
+First, create two configuration files, e.g., `config_base.yaml` and `config_custom.yaml` with the following contents:
+
+**config_base.yaml**:
+```yaml
+listen_host: "localhost"
+listen_port: 8080
+connect_host: "example.com"
+connect_port: 80
+log_level: "INFO"
+```
+
+**config_custom.yaml**:
+```yaml
+allowed_clients:
+  - "192.168.1.0/24"
+denied_clients:
+  - "192.168.1.10"
+  - "192.168.2.0/24"
+access_order: "deny-first"
+```
+
+Now, you can start the server using these configuration files:
+
+```bash
+emcgw -c config_base.yaml config_custom.yaml
+```
+
+Here's what this updated example does:
+- `-c config_base.yaml config_custom.yaml` specifies two configuration files to use. The settings in `config_base.yaml` serve as the base configuration, and settings in `config_custom.yaml` will override any matching settings from the base configuration.
+
+In this setup, it will use the base configuration from `config_base.yaml` for general settings and override access control settings with the specified allowed and denied clients and access order from `config_custom.yaml`. The server will use "deny-first" access order, and clients in the denied list will be denied access.
+
+This allows you to have a common base configuration and easily customize access control by specifying only the necessary changes in a separate configuration file.
+
+Note: Please make sure that these configuration files exist and are correctly formatted in YAML. The `-c` flag allows you to specify one or more configuration files to merge and apply their settings to the server.
+
+Example 5: Using Allowed and Denied Clients with "Allow-First" Access Order
+In this example, we configure the server to use "allow-first" access order, which means clients in the allowed list take precedence over the denied list. We also specify both allowed and denied clients.
+
+bash
+Copy code
+emcgw -l localhost -p 8080 -r example.com -P 80 -L DEBUG -v -a 192.168.1.0/24 -d 192.168.1.10 -d 192.168.2.0/24 --access-order allow-first
+Here's what this example does:
+
+-l localhost sets the host for the server to listen on to "localhost."
+-p 8080 sets the port to bind to as 8080.
+-r example.com specifies the target host to connect to as "example.com."
+-P 80 sets the target port to connect to as 80.
+-L DEBUG sets the log level to "DEBUG," providing more detailed logging.
+-v increases the verbosity level for even more detailed logging.
+-a 192.168.1.0/24 specifies a list of allowed clients using IP/CIDR notation.
+-d 192.168.1.10 -d 192.168.2.0/24 specifies two clients in the denied list.
+--access-order allow-first sets the access order to "allow-first."
+In this setup, clients in the allowed list (192.168.1.0/24) will be allowed access, even if they are also in the denied list. Clients in the denied list (192.168.1.10 and the entire 192.168.2.0/24 network) will be denied access.
+
+Note: These examples demonstrate how to set up access control for your server using both allowed and denied clients. The choice of "allow-first" or "deny-first" determines the access order priority, affecting which clients are granted or denied access.
 
 # Installation
 
