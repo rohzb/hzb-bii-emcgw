@@ -10,9 +10,72 @@ The EMC protocol is an extension of the AMC protocol, which is used to control m
 
 # Usage
 
-Please see examples of the current API features in the [examples](examples/) directory.
+1. **Basic Usage:**
 
-There is some documentation included as a doc strings to the classes, but for now it is not yet comprehensive as the API is a subject to change. 
+   To start the server with default settings, you can simply run the following command:
+
+   ```bash
+   emcgw
+   ```
+
+2. **Specify Listen and Connect Hosts:**
+
+   You can specify the listen host and connect host using command-line options. For example:
+
+   ```bash
+   emcgw -l 0.0.0.0 -p 8080 -r example.com -P 80
+   ```
+
+3. **Verbosity Levels:**
+
+   Increase verbosity level for debugging using the `-v` option. For example:
+
+   ```bash
+   emcgw -v             # Increase verbosity level (INFO)
+   emcgw -vv            # Increase verbosity level (DEBUG)
+   emcgw -vvv           # Increase verbosity level (TRACE)
+   ```
+
+4. **Specify Configuration File:**
+
+   You can also specify a YAML configuration file with all the settings:
+
+   ```bash
+   emcgw -c config.yaml
+   ```
+
+   Here is an example `config.yaml` file:
+
+   ```yaml
+   listen_host: 0.0.0.0
+   listen_port: 8080
+   connect_host: example.com
+   connect_port: 80
+   log_level: DEBUG
+   allowed_clients:
+     - 192.168.1.1
+     - "10.0.0.0/8"
+     - example.net
+   ```
+
+5. **Multiple Configuration Files:**
+
+   You can provide multiple configuration files, and they will be read one after another:
+
+   ```bash
+   emcgw -c config1.yaml -c config2.yaml
+   ```
+
+6. **Custom Log Levels:**
+
+   You can use custom log levels when specifying the log level:
+
+   ```bash
+   emcgw -L VERBOSE      # Custom log level for more detailed information
+   emcgw -L TRACE        # Custom log level for maximum verbosity
+   ```
+
+Remember to customize these examples based on the actual options and features of your application.
 
 
 ## Installation
