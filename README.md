@@ -124,16 +124,73 @@ In this setup, clients in the allowed list (192.168.1.0/24) will be allowed acce
 
 Note: These examples demonstrate how to set up access control for your server using both allowed and denied clients. The choice of "allow-first" or "deny-first" determines the access order priority, affecting which clients are granted or denied access.
 
+Certainly! Below is a section you can include in your `README.md` to guide potential users on how to get started with your project using Visual Studio Code and Dev Containers for development and testing.
+
 # Installation
 
-**Note:** The instlation section is for the current "under development" version. ^
+**Note:** The "Getting Started with Visual Studio Code and Dev Containers" section below provides an alternative and recommended approach for setting up your development environment.
 
-Clone this repository and run `scripts/bootstrap.sh` to initialize the python virtual environment and set up needed dependencies.
+To set up this project, follow these steps:
 
-Running tests with coverage:
-```bash
-> pytest --cov=PROJECT-NAME-HERE tests/
-```
+1. Clone this repository to your local machine using Git:
+
+    ```bash
+    git clone https://github.com/rohzb/hzb-bii-emcgw
+    ```
+
+2. Run the following script to initialize the Python virtual environment and set up the required dependencies:
+
+    ```bash
+    bash -e scripts/bootstrap.sh
+    ```
+
+3. To run tests with coverage, use the following command:
+
+    ```bash
+    pytest --cov=PROJECT-NAME-HERE tests/
+    ```
+
+## Getting Started with Visual Studio Code and Dev Containers
+
+This project is designed to be used with Visual Studio Code and Dev Containers, providing a consistent and isolated development environment for easier collaboration and testing.
+
+**Prerequisites:**
+- [Visual Studio Code](https://code.visualstudio.com/download)
+- [Docker](https://www.docker.com/get-started) installed on your system
+- [Remote Development Extension Pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack) for Visual Studio Code (includes Remote - Containers extension)
+
+Follow these steps to set up your development environment:
+
+**Step 1: Clone the Repository**
+- Clone this repository to your local machine using Git:
+
+    ```bash
+    git clone https://github.com/rohzb/hzb-bii-emcgw
+    ```
+
+**Step 2: Open the Project in Visual Studio Code**
+
+- Open Visual Studio Code.
+- From the "File" menu, select "Open Folder" and navigate to the project directory.
+
+**Step 3: Reopen in Container**
+
+- Once the project is open in Visual Studio Code, you will see a notification at the bottom-right indicating that a dev container configuration file (`devcontainer.json`) exists in the project. Click "Reopen in Container" in the notification or use the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P`) and search for "Remote-Containers: Reopen in Container."
+
+**Step 4: Build and Initialize the Dev Container**
+
+- Visual Studio Code will now build and initialize the dev container based on the configuration defined in `.devcontainer/devcontainer.json`.
+
+**Step 5: Development and Testing**
+
+- You are now inside the isolated development environment. You can develop, run, and test your project within this container.
+- Terminal access and all the required tools and dependencies for your project are available in this environment.
+
+**Step 6: Saving Your Work**
+
+- Your work within the container is saved directly to your local machine. When you're done, you can commit and push changes as usual.
+
+By following these steps, you can easily set up and use the development environment provided by Dev Containers in Visual Studio Code. It ensures that your development environment matches the project's requirements and dependencies, making it easier to collaborate with others and ensures consistent development and testing environments.
 
 # Repository structure
 
