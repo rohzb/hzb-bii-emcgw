@@ -32,14 +32,19 @@ def main():
     log_level = args.log_level or config.get("log_level", "INFO")
     
     # Adjust logging level based on verbosity
-    if args.verbosity == 1:
+    if args.verbosity == 0:
         log_level = "INFO"
+    elif args.verbosity == 1:
+        log_level = "VERBOSE"
     elif args.verbosity == 2:
         log_level = "DEBUG"
     elif args.verbosity >= 3:
         log_level = "TRACE"
 
-    # Define a custom TRACE log level
+    # Define a custom log levels
+    logging.addLevelName('VERBOSE', logging.INFO - 5)
+    setattr(logging, 'VERBOSE', logging.INFO - 5)
+
     logging.addLevelName('TRACE', logging.DEBUG - 5)
     setattr(logging, 'TRACE', logging.DEBUG - 5)
     
