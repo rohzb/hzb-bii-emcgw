@@ -25,6 +25,11 @@ class ConfigHandler:
             "allowed_clients" : None
         }
 
+        self.standard_configs = [
+            "/etc/emcgw/config.yaml", 
+            "/etc/emcgw.yaml",
+        ]
+
         self.args = None
         self.config = {}
 
@@ -60,7 +65,7 @@ class ConfigHandler:
             None
         """
         parser = argparse.ArgumentParser(prog="emcgw")
-        parser.add_argument("-c", "--config", help="Path to YAML config file")
+        parser.add_argument("-c", "--config", action="append", help="Path to YAML config file")
         parser.add_argument("-l", "--listen-host", help="The host to listen on")
         parser.add_argument("-p", "--listen-port", type=int, help="The port to bind to")
         parser.add_argument("-r", "--connect-host", help="The target host to connect to")
@@ -84,7 +89,9 @@ class ConfigHandler:
         Returns:
             None
         """
-        config_files = [os.path.join("/etc/emcgw/config.yaml"), "/etc/emcgw.yaml", self.args.config]
+        config_files = self.standard_configs.copy()
+        if self.args.config:
+            config_files.extend(self.args.config)
 
         for file in config_files:
             if file and os.path.isfile(file):
