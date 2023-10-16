@@ -2,3 +2,5 @@ listen_host: localhost
 listen_port: 8080
 connect_host: bii-hermes.devx.bessy.de
 connect_port: 22
+allowed_clients:
+  - 127.0.0.1

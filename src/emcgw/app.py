@@ -22,7 +22,8 @@ class ConfigHandler:
             "listen_port": 8080,
             "connect_port": 80,
             "log_level": "INFO",
-            "allowed_clients" : None
+            "allowed_clients" : None,
+            "denied_clients" : None,
         }
 
         self.standard_configs = [
@@ -31,7 +32,7 @@ class ConfigHandler:
         ]
 
         self.args = None
-        self.config = {}
+        self.config = self.defaults.copy()
 
     def process(self):
         """
@@ -73,6 +74,8 @@ class ConfigHandler:
         parser.add_argument("-L", "--log-level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "VERBOSE", "TRACE"], help="Set logging level")
         parser.add_argument("-v", dest="verbosity", action="count", default=0, help="Increase verbosity level (-v for INFO, -vv for DEBUG, -vvv for TRACE)")
         parser.add_argument("-a", "--allowed-clients", nargs="*", help="List of allowed clients in IP/CIDR or hostname format")
+        parser.add_argument("-d", "--denied-clients", nargs="*", help="List of denied clients in IP/CIDR or hostname format")
+        parser.add_argument("--access-order", choices=["allow-first", "deny-first"], help="Access order priority")
 
         self.args = parser.parse_args()
 
@@ -173,11 +176,22 @@ def main():
     # Initialize the custom logger
     logger.set_log_level(config["log_level"])
 
-    # preprocess access list
-    access_list = AccessList(config["allowed_clients"])
+    # Preprocess access list
+    allowed_clients = AccessList(config["allowed_clients"])
+    denied_clients = AccessList(config["denied_clients"])
+    access_order = config.get("access_order", "allow-first")  # Default to allow-first if not specified
 
-    # start the server
-    server = Server(config["listen_host"], config["listen_port"], config["connect_host"], config["connect_port"], access_list)
+    # Start the server with the access order configuration
+
+    server = Server(
+        config["listen_host"],
+        config["listen_port"],
+        config["connect_host"],
+        config["connect_port"],
+        allowed_clients,
+        denied_clients,
+        access_order
+    )
     server.start()
 
 if __name__ == "__main__":

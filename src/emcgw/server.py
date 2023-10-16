@@ -4,30 +4,37 @@ import ipaddress
 from .connection_handler import ConnectionHandler
 from typing import List, Union
 
-
 class AccessList:
-    def __init__(self, allowed_clients: Union[List[str], 'AccessList'] = None) -> None:
+    def __init__(self, clients: Union[List[str], 'AccessList'] = None) -> None:
         """
         Initialize an AccessList instance.
 
         Args:
-            allowed_clients (list or AccessList): Optional list of allowed client specifications or an existing
-            AccessList instance.
+            clients (list or AccessList): Optional list of client specifications or an existing AccessList instance.
 
-        Example allowed_clients lists:
+        Example client lists:
         - ["192.168.1.1", "192.168.2.0/24", "example.com"]
         - ["10.0.0.0/8"]
         """
-        if isinstance(allowed_clients, AccessList):
-            self.allowed_clients = allowed_clients.allowed_clients.copy()
-        elif isinstance(allowed_clients, list):
-            self.allowed_clients = self.parse_allowed_clients(allowed_clients)
-        elif allowed_clients is None:
-            self.allowed_clients = set()
+        if isinstance(clients, AccessList):
+            self.clients = clients.clients.copy()
+        elif isinstance(clients, list):
+            self.clients = self.parse_clients(clients)
+        elif clients is None:
+            self.clients = set()
 
-    def parse_allowed_clients(self, allowed_clients: List[str]) -> set:
+    def parse_clients(self, client_list: List[str]) -> set:
+        """
+        Parse and validate a list of client specifications.
+
+        Args:
+            client_list (list): List of client specifications.
+
+        Returns:
+            set: A set of valid client representations (IP addresses or networks).
+        """
         parsed_clients = set()
-        for client_spec in allowed_clients:
+        for client_spec in client_list:
             try:
                 # Check if it's an IP address
                 ip = ipaddress.IPv4Address(client_spec)
@@ -43,13 +50,22 @@ class AccessList:
                     logger.warning(f"Invalid client spec: {client_spec}")
         return parsed_clients
 
-    def is_allowed(self, client_address: str) -> bool:
+    def __contains__(self, client_address: str) -> bool:
+        """
+        Check if a client's IP address is in the current access list.
+
+        Args:
+            client_address (str): The client's IP address.
+
+        Returns:
+            bool: True if the client is allowed, False otherwise.
+        """
         try:
             client_ip = ipaddress.IPv4Address(client_address)
-            for allowed in self.allowed_clients:
-                if isinstance(allowed, ipaddress.IPv4Network) and client_ip in allowed:
+            for client in self.clients:
+                if isinstance(client, ipaddress.IPv4Network) and client_ip in client:
                     return True
-                elif client_ip == allowed:
+                elif client_ip == client:
                     return True
             return False
         except ipaddress.AddressValueError:
@@ -61,7 +77,7 @@ class Server:
     """
     Represents a server that listens on a given port and forwards connections to a remote host and port.
     """
-    def __init__(self, local_host, local_port, remote_host, remote_port, access_list=None):
+    def __init__(self, local_host, local_port, remote_host, remote_port, allowed_clients=None, denied_clients=None, access_order="allow_first"):
         """
         Initialize a Server instance.
 
@@ -70,30 +86,46 @@ class Server:
             local_port (int): The port to bind to.
             remote_host (str): The target host to connect to.
             remote_port (int): The target port to connect to.
-            access_list (list): Optional list of allowed client IP addresses.
+            allowed_clients (list): Optional list of allowed client IP addresses.
+            denied_clients (list): Optional list of denied client IP addresses.
+            access_order (str): The order in which access control is applied ("allow-first" or "deny-first").
         """
         self.local_host = local_host
         self.local_port = local_port
         self.remote_host = remote_host
         self.remote_port = remote_port
-        #self.access_list = access_list
-        self.access_list = AccessList(allowed_clients=access_list)
+        self.allowed_clients = AccessList(clients=allowed_clients)
+        self.denied_clients = AccessList(clients=denied_clients)
+        self.access_order = access_order
 
     def is_client_allowed(self, client_address):
         """
-        Check if the client's IP address is allowed based on the access list.
+        Check if the client's IP address is allowed based on the access lists and access order.
 
         Args:
             client_address (str): The client's IP address.
 
         Returns:
-            bool: True if the client is allowed, False otherwise.
+            Tuple[bool, str]: A tuple of two values:
+                - The first element indicates if the client is allowed (True/False).
+                - The second element is a string indicating the reason to deny the client (empty if allowed).
         """
-        if not self.access_list:
-            return True  # No access list, allow all clients
+        if not self.allowed_clients and not self.denied_clients:
+            return True, ""
 
-        #return client_address in self.access_list
-        return self.access_list.is_allowed(client_address)
+        allowed = client_address in self.allowed_clients
+        denied = client_address in self.denied_clients
+
+        if self.access_order == "deny-first":
+            if denied:
+                return False, "Client is in the deny list."
+            return True, "" if allowed else "Client is not in the access list."
+        elif self.access_order == "allow-first":
+            if allowed:
+                return True, ""
+            return False, "Client is not in the access list." if denied else ""
+
+        return False, "Invalid access order."
 
     def start(self):
         """
@@ -109,8 +141,13 @@ class Server:
         while True:
             src_socket, src_address = server_socket.accept()
 
-            if not self.is_client_allowed(src_address[0]):
-                logger.warning(f"Connection from {src_address[0]} denied (not in access list).")
+            # Check if the client is allowed
+            is_allowed, denial_reason = self.is_client_allowed(src_address[0])
+
+            if not is_allowed:
+                # Log the reason for denial
+                logger.warning(f"Connection from {src_address[0]} denied: {denial_reason}")
+
                 src_socket.close()
                 continue
 
