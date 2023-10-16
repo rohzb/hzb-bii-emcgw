@@ -1,6 +1,7 @@
 import socket
 import threading
-import logging
+#import logging
+from .logger import logger
 
 class ConnectionHandler:
     """
@@ -33,9 +34,9 @@ class ConnectionHandler:
         dst_address, dst_port = self.dst_socket.getsockname()
 
         if direction:
-            logging.debug(f"{src_address[0]},{src_port} -> {dst_address[0]},{dst_port} {len(buffer)} bytes")
+            logger.debug(f"{src_address[0]},{src_port} -> {dst_address[0]},{dst_port} {len(buffer)} bytes")
         else:
-            logging.debug(f"{dst_address[0]},{dst_port} <- {src_address[0]},{src_port} {len(buffer)} bytes")
+            logger.debug(f"{dst_address[0]},{dst_port} <- {src_address[0]},{src_port} {len(buffer)} bytes")
 
         return buffer
 
@@ -67,13 +68,13 @@ class ConnectionHandler:
                     break  # Handle disconnect properly
                 dst.send(self.handle(buffer, direction))
             except (socket.error, ConnectionResetError):
-                logging.warning("Socket connection closed.")
+                logger.warning("Socket connection closed.")
                 break
             
         if not self.stop_event.is_set():
           self.stop_event.set()  # Signal thread termination
-          logging.info(f"Closing connection {src.getsockname()[0]},{src.getsockname()[1]}!")
+          logger.info(f"Closing connection {src.getsockname()[0]},{src.getsockname()[1]}!")
           src.close()
-          logging.info(f"Closing connection {dst.getsockname()[0]},{dst.getsockname()[1]}!")
+          logger.info(f"Closing connection {dst.getsockname()[0]},{dst.getsockname()[1]}!")
           dst.close()
     

@@ -1,12 +1,9 @@
 import socket
-import logging
+from .logger import logger
+import ipaddress
 from .connection_handler import ConnectionHandler
-import ipaddress
-
-import socket
-import ipaddress
-import logging
 from typing import List, Union
+
 
 class AccessList:
     def __init__(self, allowed_clients: Union[List[str], 'AccessList'] = None) -> None:
@@ -43,7 +40,7 @@ class AccessList:
                 except ipaddress.NetmaskValueError:
                     # It might be a hostname or an invalid entry
                     # Log a warning for an invalid client spec
-                    logging.warning(f"Invalid client spec: {client_spec}")
+                    logger.warning(f"Invalid client spec: {client_spec}")
         return parsed_clients
 
     def is_allowed(self, client_address: str) -> bool:
@@ -57,7 +54,7 @@ class AccessList:
             return False
         except ipaddress.AddressValueError:
             # Log a warning for an invalid client address
-            logging.warning(f"Invalid client address: {client_address}")
+            logger.warning(f"Invalid client address: {client_address}")
             return False
 
 class Server:
@@ -106,25 +103,25 @@ class Server:
         server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server_socket.bind((self.local_host, self.local_port))
         server_socket.listen(0x40)
-        logging.info(f"Server started on {self.local_host}:{self.local_port}")
-        logging.info(f"Connect to {self.local_host}:{self.local_port} to access {self.remote_host}:{self.remote_port}")
+        logger.info(f"Server started on {self.local_host}:{self.local_port}")
+        logger.info(f"Connect to {self.local_host}:{self.local_port} to access {self.remote_host}:{self.remote_port}")
 
         while True:
             src_socket, src_address = server_socket.accept()
 
             if not self.is_client_allowed(src_address[0]):
-                logging.warning(f"Connection from {src_address[0]} denied (not in access list).")
+                logger.warning(f"Connection from {src_address[0]} denied (not in access list).")
                 src_socket.close()
                 continue
 
-            logging.info(f"[Establishing connection] {src_address[0]} -> {self.local_host}:{self.local_port} -> ? -> {self.remote_host}:{self.remote_port}")
+            logger.info(f"[Establishing connection] {src_address[0]} -> {self.local_host}:{self.local_port} -> ? -> {self.remote_host}:{self.remote_port}")
 
             try:
                 dst_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 dst_socket.connect((self.remote_host, self.remote_port))
-                logging.info(f"[OK] {src_address[0]} -> {self.local_host}:{self.local_port} -> {dst_socket.getsockname()} -> {self.remote_host}:{self.remote_port}")
+                logger.info(f"[OK] {src_address[0]} -> {self.local_host}:{self.local_port} -> {dst_socket.getsockname()} -> {self.remote_host}:{self.remote_port}")
 
                 connection_handler = ConnectionHandler(src_socket, dst_socket)
                 connection_handler.start_transfer()
             except Exception as e:
-                logging.error(repr(e))
+                logger.error(repr(e))
