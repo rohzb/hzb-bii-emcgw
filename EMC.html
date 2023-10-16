@@ -1,0 +1,592 @@
+<title>Extended Monochromator Control </title>
+
+<H1>Extended Monochromator Control (EMC) </H1>
+
+ The Extended Monochromator Control gives access to beamlines at BESSY II via the RS232
+ serial line. It comprises the <a href="amc.html">AMC</a>-protocol
+ and adds new commands and features. 
+<br>
+ Most of the new commands became necessary due to the  <A HREF="#SSS">continuous mode</A>,
+ where the monochromator moves continuously from a start- to an endenergy.
+ Other commands allow the client to <A HREF="#SPD">set and read various monochromator 
+ parameters</A> or  <A HREF="#GLE">retrieve error messages </A>after a failed request.
+<br>
+ Finally, the <A HREF="#:">fast energy readback</A> command allows the readout of the current photon energy
+ with significantly increased speed.
+<p>
+
+<H3>Hardware and RS232 parameters</H3>
+
+<P>
+ The monochromator control is available on a standard serial  line (RS232)
+ connecting  <font color=red>directly </font> to the monochromator VME-crate.
+ Its features are:
+ <ul> 
+   <li> ASCII connection,  human readable.
+   <li> Default parameters are 9600 baud, 8 bit, no parity, 1 stop bit.
+   <li> No hardware handshake
+ </ul>
+
+ The baudrate can be configured up to 38400 baud in the configuration
+ file of the monochromator (AMC.CFG).
+ <br>
+ 
+ Terminal programs (e.g. Kermit, Hyperterm) can be used to communicate with the 
+ monochromator by sending the supported commands.
+
+<H3>Availability</H3>
+
+ <p>
+ Beamlines supporting the EMC protocol are
+ <ul>
+  <li> <a href="/docs/bii/Beamlines/isis/isis.html"          > ISISS catalysis beamline   </a>
+  <li> <a href="/docs/bii/Beamlines/d081pgm1/d081pgm1.html"  > Optic beamline             </a>
+  <li> <a href="/docs/bii/Beamlines/d161pgm1/d161pgm1.html"  > German Russian beamline    </a>
+  <li> <a href="/docs/bii/Beamlines/pm3/pm3.html"            > PM3                        </a>
+  <li> <a href="/docs/bii/Beamlines/u1251pgm1/u1251pgm1.html"  > UE112-PGM1                 </a>
+  <li> <a href="/docs/bii/Beamlines/u411sgm1/u411sgm1.html"  > U41-SGM (X-ray microscope) </a>
+  <li> <a href="/docs/bii/Beamlines/ue461pgm1/ue461pgm1.html"> UE46-PGM1                  </a>
+  <li> <a href="/docs/bii/Beamlines/ue461pgm2/ue461pgm2.html"> UE46-XM (X-ray microscopes)</a>
+  <li> <a href="/docs/bii/Beamlines/u1252sgm1/u1252sgm1.html"> BUS-Beamline               </a>
+  <li> <a href="/~mahler/ue56-2.html"                        > UE56/2-PGM1 (MPG-beamline) </a>
+  <li> <a href="/~mahler/ue56-2.html"                        > UE56/2-PGM2 (MPG-beamline) </a>
+  <li>  UE52-PGM 
+  <li> <a href="/docs/bii/Beamlines/u492pgm1/u492pgm1.html"> U49/2-PGM1                  </a>
+  <li> <a href="http://www.physik.tu-cottbus.de/physik/ap2/ausstattung/hp_bessy_bilder.htm"> U49/2-PGM2  </a>
+</ul>
+
+
+<H3>Commands</H3>
+
+ A command is a mnemonic string and one or more parameters
+ separated by blanks (ASCII 32). The whole command string is
+ terminated by a Carriage Return (CR=ASCII 13).
+<br>
+ Every command has to be terminated by a Carriage Return (ASCII 13) and so is  
+ every answer - except the fast energy readout command and its readback values.
+
+<p>
+ Successful calls are acknowledged by a 't CR', where the 't' is optionally 
+ followed by a parameter.
+ <br>
+ If errors occure, the answer is 'f CR' .
+ After reception of an 'f CR', a string containing an error description can be 
+ requested by the <A HREF="#GLE">GLE</A>-command.
+ <br>
+ Unsupported commands, as well as empty strings, are acknowledged by a 'f CR'.
+ <p> 
+ In the following, the terminating Carriage Returns are omitted for the
+ sake of readability.
+
+<H3>Command list</H3>
+
+ The following table lists the available commands, their syntax, a short description
+ and an example of their usage.<br>
+ 
+ The terminating CR after each command and answer is suppressed for the sake of readability.
+ 
+<HR>
+
+
+<TABLE  cellpadding ="3">
+  <TR><TH>request                              </TH><TH>         return value</TH><TH align="left">  short description                                </TH><TH colspan=2>           example        </TH></TR>
+  <TR><TD>                                     </TD><TD VALIGN=TOP>          </TD><TD>                                                                 </TD><TD>            request    </TD><TD>        answer     </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#OPN"  >OPN    </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>open the mono driver                                </TD><TD VALIGN=TOP> OPN        </TD><TD VALIGN=TOP>t       </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#CLO"  >CLO    </A></TD><TD VALIGN=TOP> t        </TD><TD VALIGN=TOP>No effect, only for compatibility                   </TD><TD VALIGN=TOP> CLO        </TD><TD VALIGN=TOP>t       </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#SPO"  >SPO_x  </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>set the monochromator to wavelength x in [nm]       </TD><TD VALIGN=TOP> SPO_2.5376 </TD><TD VALIGN=TOP>t       </TD></TR>    
+  <TR><TD VALIGN=TOP><A HREF="#GPO"  >GPO    </A></TD><TD VALIGN=TOP> t_x or f </TD><TD VALIGN=TOP>give the actual wavelength of the monochromator in [nm]</TD><TD VALIGN=TOP> GPO     </TD><TD VALIGN=TOP>t_2.5376</TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#STO"  >STO    </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>stops the motion of the monochromator immediately   </TD><TD VALIGN=TOP> STO        </TD><TD VALIGN=TOP>t       </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#GST"  >GST    </A></TD><TD VALIGN=TOP> 0, 1 or 3</TD><TD VALIGN=TOP>get status (0:READY, 1: RUNNING, 3: IN SWEEP)       </TD><TD VALIGN=TOP> GST        </TD><TD VALIGN=TOP>t_1     </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#SPE"  >SPE_x  </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>set the monochromator to energy x in [eV]           </TD><TD VALIGN=TOP> SPE_100.00 </TD><TD VALIGN=TOP>t       </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#GPE"  >GPE    </A></TD><TD VALIGN=TOP> t_x or f </TD><TD VALIGN=TOP>give the actual energy of the monochromator in [eV] </TD><TD VALIGN=TOP> GPE        </TD><TD VALIGN=TOP>t_100.00</TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#SSS"  >SSS    </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>set start energy for continuous mode in [eV]        </TD><TD VALIGN=TOP> SSS_120.00 </TD><TD VALIGN=TOP>t       </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#SSS"  >SSE    </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>set end energy for continuous mode in [eV]          </TD><TD VALIGN=TOP> SSE_180.00 </TD><TD VALIGN=TOP>t       </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#SSS"  >SSV    </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>set velocity for continuous mode in [eV/s]          </TD><TD VALIGN=TOP> SSV_1.0    </TD><TD VALIGN=TOP>t       </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#SGS"  >SGS    </A></TD><TD VALIGN=TOP> t_x or f </TD><TD VALIGN=TOP>read start energy for continuous mode in [eV]       </TD><TD VALIGN=TOP> SGS        </TD><TD VALIGN=TOP>t_120.00</TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#SGS"  >SGE    </A></TD><TD VALIGN=TOP> t_x or f </TD><TD VALIGN=TOP>read end energy for continuous mode in [eV]         </TD><TD VALIGN=TOP> SGE        </TD><TD VALIGN=TOP>t_180.00</TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#SGS"  >SGV    </A></TD><TD VALIGN=TOP> t_x or f </TD><TD VALIGN=TOP>read velocity for continuous mode in [eV/s]         </TD><TD VALIGN=TOP> SGV        </TD><TD VALIGN=TOP>t_1.00  </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#SSS"  >SI     </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>initialize continuous mode and go to start of the ramp</TD><TD VALIGN=TOP> SI       </TD><TD VALIGN=TOP>t       </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#SSS"  >SR     </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>starts continuous mode run                          </TD><TD VALIGN=TOP> SR         </TD><TD VALIGN=TOP>t       </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#GLE"  >GLE    </A></TD><TD VALIGN=TOP> message  </TD><TD VALIGN=TOP>get last error message                              </TD><TD VALIGN=TOP> GLE        </TD><TD VALIGN=TOP>out of range </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#GLE"  >GLE_i  </A></TD><TD VALIGN=TOP> message  </TD><TD VALIGN=TOP>get last but "i" error message                      </TD><TD VALIGN=TOP> GLE_2      </TD><TD VALIGN=TOP>invalid c-value</TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#SPD"  >SPL_s_i</A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>set any INTEGER-type parameter ofthe  monochromator </TD><TD VALIGN=TOP> SPL_order_1</TD><TD VALIGN=TOP>t       </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#SPD"  >SPD_s_x</A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>set any FLOAT-type parameter of the monochromator   </TD><TD VALIGN=TOP> SPD_cff_2.0</TD><TD VALIGN=TOP>t       </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#SPD"  >GPL_s  </A></TD><TD VALIGN=TOP> t_i or f </TD><TD VALIGN=TOP>read any INTEGER-type parameter of the monochromator</TD><TD VALIGN=TOP> GPL_order  </TD><TD VALIGN=TOP>t_1     </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#SPD"  >GPD_s  </A></TD><TD VALIGN=TOP> t_x or f </TD><TD VALIGN=TOP>read any FLOAT-type parameter of the monochromator  </TD><TD VALIGN=TOP> GPD_cff    </TD><TD VALIGN=TOP>t_2.0   </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#GDN"  >GDN    </A></TD><TD VALIGN=TOP> t_s or f </TD><TD VALIGN=TOP>gives the name of the monochromator                 </TD><TD VALIGN=TOP> GDN        </TD><TD VALIGN=TOP>t_ISISS </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#SZO"  >SZO    </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>set monochromator to zero order position            </TD><TD VALIGN=TOP> SZO        </TD><TD VALIGN=TOP>t       </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#UGG"  >UGG    </A></TD><TD VALIGN=TOP> t_x or f </TD><TD VALIGN=TOP>read undulator Gap in mm                            </TD><TD VALIGN=TOP> UGG        </TD><TD VALIGN=TOP>t_31.234</TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#USG"  >USG    </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>set undulator Gap in mm                             </TD><TD VALIGN=TOP> USG_54.267 </TD><TD VALIGN=TOP>t       </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#UGS"  >UGS    </A></TD><TD VALIGN=TOP> t_x or f </TD><TD VALIGN=TOP>read undulator Shift in mm                          </TD><TD VALIGN=TOP> UGS        </TD><TD VALIGN=TOP>t_12.231</TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#USS"  >USS    </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>set undulator Shift in mm                           </TD><TD VALIGN=TOP> USS_5.943  </TD><TD VALIGN=TOP>t       </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#UGST" >UGST   </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>read undulator status                               </TD><TD VALIGN=TOP> UGST       </TD><TD VALIGN=TOP>t_0     </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#UGF"  >UGF    </A></TD><TD VALIGN=TOP> t_s or f </TD><TD VALIGN=TOP>gives the name of the current undulator table file  </TD><TD VALIGN=TOP> UGF        </TD><TD VALIGN=TOP>linhor.ums</TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#SPOL" >GPOL   </A></TD><TD VALIGN=TOP> t_i or f </TD><TD VALIGN=TOP>get polarisation                                    </TD><TD VALIGN=TOP> GPOL       </TD><TD VALIGN=TOP>t_1    </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#GPOL" >SPOL   </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>set polarisation                                    </TD><TD VALIGN=TOP> SPOL_1     </TD><TD VALIGN=TOP>t       </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#CSA"  >CSA    </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>set chopper to postion A                            </TD><TD VALIGN=TOP> CSA        </TD><TD VALIGN=TOP>t       </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#CSA"  >CSB    </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>set chopper to postion B                            </TD><TD VALIGN=TOP> CSB        </TD><TD VALIGN=TOP>t       </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#CSW"  >CSW    </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>chopper switch                                      </TD><TD VALIGN=TOP> CSW        </TD><TD VALIGN=TOP>t       </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#CGP"  >CGP    </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>chopper get position                                </TD><TD VALIGN=TOP> CGP        </TD><TD VALIGN=TOP>t_1     </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#DMEAS">DMEAS  </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>Measure (Ringcurrent)                               </TD><TD VALIGN=TOP> DMEAS      </TD><TD VALIGN=TOP>t_246.34</TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#SBPC" >SBPC   </A></TD><TD VALIGN=TOP> t or f   </TD><TD VALIGN=TOP>Switch Beam Position Control on/off                 </TD><TD VALIGN=TOP> SBPC_0_1   </TD><TD VALIGN=TOP>t       </TD></TR>
+  <TR><TD VALIGN=TOP><A HREF="#GPSD" >GPSD   </A></TD><TD VALIGN=TOP> t_x or f </TD><TD VALIGN=TOP>Get Position Sensitive Device Reading               </TD><TD VALIGN=TOP> GPSD_0_1   </TD><TD VALIGN=TOP>t_5.012 </TD></TR>
+</TABLE>
+<HR>
+<PRE>
+ _ : blank
+ x : any float number, e.g. 2.345
+ i : any integer number e.g. 1234
+ s : case sensitive string, e.g. minEnergy
+ t : the character t
+ f : the character f
+ message: a string terminated by CR
+</PRE>
+
+ <ul>
+  <li> error messages are reset with every new move command.
+  <li> no new command is accepted unless the current one is processed.
+  <li> the continuous mode sets the status to 3 while running between
+       start- and endenergy.
+  <li> some parameters as e.g. the c-value (cff) or diffraction order 
+      (order) become
+       effective with the next positioning-command.
+ </ul>
+
+
+<P>
+<P>
+
+
+
+<!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+<!--                       Command descriptions                                 -->
+<!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+
+
+
+<H2>Command descriptions</H2>
+
+
+
+<H3><font color=green> Beamline (general commands) </font></H3>
+
+ <H4> <font color=red><A Name="OPN">OPN </A></font>- Open</H4>
+
+  The command opens the monochromator and a 't' is reported on successful execution.
+  A 'f' is reported if the monochromator is not ready, e.g. if the drives have
+  not yet found their reference marks.
+
+ <H4> <font color=red><A Name="CLO">CLO </A></font>- Close</H4>
+
+  Available only for compatibility. A 't' is reported at any time.
+
+ <H4> <font color=red><A Name="STO">STO </A></font>- Stop</H4>
+
+  The motion of the monochromator is terminated, all motors slow down.
+
+ <H4> <font color=red><A Name="GST">GST </A></font>- Get Status</H4>
+
+  Reports the status of the beamline. The command can be issued at 
+  any time.<p>
+  The information is encoded bitwise:
+
+   <TABLE cellpadding=2> 
+    <tr><th COLSPAN =8>Bit</th> <th> </th><th align="center">value</th> <TH align="left">description</th></tr>
+    <tr><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td><td>   </td><td>  </td><td>     </td></tr>
+    <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td> = </td><td align="center">0 </td><td>Ready</td></tr>
+    <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td> = </td><td align="center">1 </td><td>Monochromator running       </td></tr>
+    <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td> = </td><td align="center">2 </td><td>The Beamline is inside the sweep range</td></tr>
+    <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td> = </td><td align="center">4 </td><td>Insertion device running    </td></tr>
+    <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td> = </td><td align="center">8 </td><td>Monochromator closed        </td></tr>
+  </TABLE>
+
+ <p><p>
+ The various status bits can be combined. Some possible results of a GST command are for example:
+
+   <TABLE cellpadding=3>
+   <tr><th align="center"> value </th> <th COLSPAN =3 align="left"> description</th></tr>
+   <tr><td align="center"> 0     </td> <td>Ready   </td><td>: </td><td>Monochromator ready, waiting for commands</td></tr>
+   <tr><td align="center"> 1     </td> <td>MonRun  </td><td>: </td><td>Monochromator running  <td></tr>
+   <tr><td align="center"> 3     </td> <td>InSweep </td><td>: </td><td>Continuous mode between start- and endenergy, running without ID (3=1+2)</td></tr>
+   <tr><td align="center"> 4     </td> <td>IdRun   </td><td>: </td><td>Only Insertion device moving</td></tr>
+   <tr><td align="center"> 5     </td> <td>Running </td><td>: </td><td>Monochromator and ID moving (5=1+4)<td></tr>
+   <tr><td align="center"> 8     </td> <td>Closed  </td><td>: </td><td>Monochromator not available, e.g. reference not found</td></tr>
+   </TABLE>
+
+ <p>
+ The EPICS-Channel <font color=green>xxx:IStatus</font> holds this integer-value too, the 
+ Channel <font color=green>xxx:Status</font> offers a human readable translation.  
+
+ <H4> <font color=red><A Name="GLE">GLE </A></font>- Get Last Error messsage </H4>
+
+  When issued without parameter (or with parameter 0), the command asks for the
+  last error message of the monochromator.
+  Although the  EPICS control panel displays only the last three error messages, a total
+  number of 10 messages are stored internally.
+  Each positioning command resets all error messages to an empty string. 
+  This means, that once an empty string is received, all messages with higher numbers 
+  are empty too. 
+
+ <H4> <font color=red><A Name="GDF">GDF</A></font> - Get Device Function </H4>
+
+  Reports on the capabilities of the monochromator control.
+ <HR>
+  <table cellpadding=1> 
+   <tr> <th>   Value     </th><th>  Name              </th><th> Description                 </th></tr>
+   <tr> <td>  0x00010    </td><td>  M_FuncSetPos      </td><td> Set monochromator energy    </td></tr>
+   <tr> <td>  0x00020    </td><td>  M_FuncGetPos      </td><td> Get monochromator energy    </td></tr>
+   <tr> <td>  0x00040    </td><td>  M_FuncGetInfo     </td><td>                             </td></tr>
+   <tr> <td>  0x00080    </td><td>  M_FuncCommand     </td><td>                             </td></tr>
+   <tr> <td>  0x00100    </td><td>  M_FuncSweepNm     </td><td> Scans wavelength            </td></tr>
+   <tr> <td>  0x00200    </td><td>  M_FuncSweepEv     </td><td> Scans photon energy         </td></tr>
+   <tr> <td>  0x00400    </td><td>  M_FuncSweepWave   </td><td> Continuous mode possible    </td></tr> 
+   <tr> <td>  0x01000    </td><td>  M_FuncIDSetGap    </td><td> Set Undulator gap           </td></tr>
+   <tr> <td>  0x02000    </td><td>  M_FuncIDGetGap    </td><td> Get Undulator gap           </td></tr>
+   <tr> <td>  0x04000    </td><td>  M_FuncIDSetMode   </td><td>                             </td></tr> 
+   <tr> <td>  0x08000    </td><td>  M_FuncIDGetMode   </td><td>                             </td></tr>  
+  </table>
+ <HR>
+
+ <H4> <font color=red><A Name="GDN">GDN </A></font>- Get Device Name </H4>
+
+  Gives the name of the beamline.
+
+ <H4> <font color=red><A Name="SPOL">SPOL </A></font>- Set Polarisation (under development)</H4>
+
+ Set the polarisation of the light. <br>
+ At undulator beamlines predefined polarisations can be set.
+ <HR>
+  <table cellpadding=1> 
+   <tr> <th>   Value </th><th>  Polarisation      </th><th> Filename     </th></tr>
+   <tr> <td>    1    </td><td>  Linear horizontal     </td><td> linhor.idt   </td></tr>
+   <tr> <td>    2    </td><td>  Linear vertical       </td><td> linver.idt   </td></tr>
+   <tr> <td>    3    </td><td>  Elliptical positive    </td><td> ellipos.idt  </td></tr>
+   <tr> <td>    4    </td><td>  Elliptical negative    </td><td> ellineg.idt  </td></tr>
+  </table>
+ <HR>
+ 
+ If the command is issued with the parameter 0 (linear polarisation),
+ an optional second parameter gives the angle (in degree) between the
+ plane of polarisation and the horizontal.
+ This is not yet supported.
+ 
+ <p>
+ At the PM3 beamline, the predefined polarisations are set. Currently, only
+ the offset-compensation of  mirror 2 is set. Mirror 1 has to be set
+ on the OS/2-computer by hand. In the future, the first mirror will
+ be rotated automatically.
+ 
+ <p>
+ The filenames can be redifined by users or the beamlinescientist.
+ Undulator beamlines load up to 7 predefined tables. Refer to the 
+<a href="/~follath/steuer.pdf"> description of the BeamlineControl</a>
+ in the section "Polarisation".
+
+ <H4> <font color=red><A Name="GPOL">GPOL </A></font>- Get Polarisation (under development)</H4>
+ If the polarisation is set by the blue knob POLARISATION or
+ by the command SPOL, the command GPOL retrieves the corresponding number.
+
+<H3><font color=green> Monochromator </font></H3>
+ 
+ 
+ 
+<H4> <font color=red><A Name="SPE">SPE </A></font>- Set Photon Energy (eV)</H4>
+
+ The monochromator is set to the photon energy given in eV. 
+ While moving, the status
+ changes to  <em>1 (RUNNING)</em>.<br>
+ When the target energy is set, the
+ status changes back to <em> 0 (READY)</em>.<br>
+ 
+ A 't' is reported if the target energy  can be set, whereas
+ a 'f' is reported if the requested energy  cannot be set,
+ e.g. the requested energy is out of range.
+ In this case no motion is initiated.
+ <p>
+ 
+ In beamlines with variable deflection angle at the grating,
+ photon energies above 1 000 000 eV are treated in a non standard way.
+ The plane mirror is set to 4 degree, the photon energy is 
+ divided by 1e6 and interpreted as angular setting of the
+ grating. 
+ Doing this, the data acquisition program can initiate a
+ scan over the zero order position, by scanning around 
+ 4 000 000 eV.
+ 
+
+<H4> <font color=red><A Name="GPE">GPE </A></font>- Get Photon Energy (eV)</H4>
+
+ The monochromator reports the current photon energy in eV.
+ 
+
+<H4> <font color=red><A Name="SPO">SPO </A></font>- Set Position (wavelength in nm)</H4>
+
+  Characteristics similar to the SPE - command. 
+
+
+<H4> <font color=red><A Name="GPO">GPO </A></font>- Get Position (wavelength in nm)</H4>
+
+ The monochromator reports the current wavelength in nm.
+<H4> <font color=red><A Name=":">:</A> </font> - fast energy readback</H4>
+
+The photon energy is transferred after a 'GPO' or 'GPE' request in a human readable form 
+with up to 17 ascii characters. Due to the restricted capabilities of the serial line,
+this limits the transmission speed.
+<p>
+
+Data acquisition programs supporting the continuous mode may wish a faster readback 
+of the monochromator energy. 
+For this purpose, a colon ':' without a terminating Carriage Return
+can be sent to the monochromator. The photon energy is then reported in binary form 
+(4 bytes in MOTOROLA format) without terminating Carriage Return.
+<br>
+Computers which represent numbers in the INTEL format have to revert the received 
+byte-sequence.
+The example shows the read-procedure for both formats:
+
+<em>
+<PRE>
+(* Reads the binary transmitted data  *)
+PROCEDURE ReadBinary(VAR val:REAL);
+TYPE  U = RECORD
+           CASE WORD OF
+                  1 : (ch : ARRAY[0..3] OF BYTE);
+                  2 : (x  : SINGLE);
+           END;
+VAR
+ i   : INTEGER;
+ buf : U;
+BEGIN
+
+ FOR i := 0 TO 3 DO Read(com,buf.ch[i]);    (* computers using MOTOROLA format *)
+
+ FOR i := 3 DOWNTO 0 DO Read(com,buf.ch[i]);   (* computers using INTEL format *)
+
+ val := buf.x;
+
+END;
+</PRE>
+</em>
+<p>
+ For a complete request a total number of 5 characters have to be transmitted
+ via the serial line (: to the mono and 4 bytes back to the client). This doubles
+ the effective transmission speed. 
+ At a  baudrate of 9600 baud, the transmission of the monochromator position by
+ the GPO / GPE command requires 23 ms, whereas the fast energy readout command
+ ':' does the same job within 13 ms.
+ These times can be further reduced if the baudrate of the serial
+ line is increased from the standard value of 9600 baud to the 
+  maximum of 38400 baud.
+<P>
+
+<H4> <font color=red><A Name="SZO">SZO </font/A>- Set Zero Order </H4>
+
+ Sets the monochromator to the zero order position, which is stored
+ for each grating independently. <br>
+ The command causes the monochromator to set the optical elements to
+ the stored zero order position.
+ While moving, the status
+ is set to  <em>1 (RUNNING)</em>. When the zero order position is set in, the
+ status turns to <em> 0 (READY)</em>.<br>
+ Due to thermal drifts of beamline components, the actual zero order position
+ may differ from the stored one. In this case, the zero order position
+ should be tuned and stored again using the EPICS ZeroOrder panel. 
+   
+
+
+
+<H3><font color=green> Undulator  </font></H3>
+
+
+ <H4> <font color=red><A Name="UGG">UGG </A></font> - Undulator Get Gap (in mm)</H4>
+  Reports the Gapvalue of the undulator.
+
+ <H4> <font color=red><A Name="USG">USG </A></font>- Undulator Set Gap (in mm)</H4>
+  Sets the undulator gap to the value given in mm. <br> 
+  If the requested gapvalue is outside of the limits, 
+  an 'f' is returned and no motion is started.
+
+ <H4> <font color=red><A Name="UGS">UGS </A></font>- Undulator Get Shift (in mm)</H4>
+  Reports the Shift value of the undulator in mm.
+
+ <H4> <font color=red><A Name="USS">USS </A></font>- Undulator Set Shift (in mm)</H4>
+  Sets the undulator shift to the value given in mm. <br> 
+  If the requested shiftvalue is outside of the limits, an 'f' is returned
+  and no motion is started.
+  
+ <H4> <font color=red><A Name="UGST">UGST </A></font>- Undulator Get Status</H4>
+  Reports the status of the undulator (Coded in an integer-value).
+
+ <H4> <font color=red><A Name="UGST">UGF </A></font>- Undulator Get Filename</H4>
+  Reports the Name of the current Filename.
+
+
+
+
+
+<H3><font color=green> Chopper  </font></H3>
+
+ <H4> <font color=red><A Name="CSA">CSA and CSB </A></font>- Chopper Set to A or B </H4>
+
+ Sets the chopper to postion A (CSA) or position B (CSB).
+ If there is no chopper, a 'f' is returned.
+
+ <H4> <font color=red><A Name="CSW">CSW </A></font>- Chopper Switch position </H4>
+  Switches the chopper from position A to B and vice versa.
+ If there is no chopper, a 'f' is returned.
+
+ <H4> <font color=red><A Name="CGP">CGP </A></font>- Chopper Get Position </H4>
+ Reports the position of the chopper. 
+ Return values:<br>
+  -1 : undefined position,<br>
+   0 : position A<br>
+   1 : position B.
+
+
+<H3><font color=green> Parameters of the beamline </font></H3>
+
+ <H4> <font color=red><A Name="SPD">SPD, SPL, GPD, GPL</A></font> - Set and Get Parameter Values</H4>
+
+  The commands allows the client to set and read parameters
+  of the beamline. Not all parameters are available on all monochromator.
+  Setting the cff-value on spherical grating
+  monochromators, for example, does not affect the monochromator operation.
+  <br>
+  Commands with an unknown parameter name are acknowledged by a 'f'. 
+ <HR>
+  <table cellpadding=5> <colgroup span="1" style="color:#FF0000;">
+   <tr><th> name       </th><th> type    </th><th>access </th><th>  description                                    </th><th> commands  </th></tr>
+   <tr><td> order      </td><td> integer </td><td> R/W   </td><td>  diffraction order                              </td><td> SPL / GPL </td></tr>
+   <tr><td> CheckBMT   </td><td> integer </td><td> R/W   </td><td>  sotware collision control  (0=OFF, 1=ON)               </td><td> SPL / GPL </td></tr>
+   <tr><td> IdOn       </td><td> integer </td><td> R/W   </td><td>  undulator coupling (0=OFF, 1=ON)           </td><td> SPL / GPL </td></tr>
+   <tr><td> slitWidth  </td><td> float   </td><td> R/W   </td><td>  width of the exit slit in mikrometer<sup>1</sup></td><td>SPD / GPD </td></tr>
+   <tr><td> slitWidth1 </td><td> float   </td><td> R/W   </td><td>  width of the exit slit (2nd branch) in mikrometer<sup>1</sup></td><td>SPD / GPD </td></tr>
+   <tr><td> cff        </td><td> float   </td><td> R/W   </td><td>  grating magnification ratio (c-value) <sup>2</sup>     </td><td> SPD / GPD </td></tr>
+   <tr><td> lineDensity</td><td> float   </td><td>  R    </td><td>  line density (1/mm)                            </td><td> GPD     </td></tr>
+   <tr><td> minEnergy  </td><td> float   </td><td>  R    </td><td>  lowest photon energy (eV)                      </td><td> GPD     </td></tr>
+   <tr><td> maxEnergy  </td><td> float   </td><td>  R    </td><td>  highest photon energy (eV)                     </td><td> GPD     </td></tr>
+   <tr><td> undGap     </td><td> float   </td><td>  R    </td><td>  undulator gap (mm)                             </td><td> GPD     </td></tr>
+   <tr><td> IdSlope    </td><td> float   </td><td> R/W   </td><td>  Slope-value  for Id-Mono-calibration                             </td><td> GPD     </td></tr>
+   <tr><td> IdOffset   </td><td> float   </td><td> R/W   </td><td>  Offset-value for Id-Mono-calibration                             </td><td> GPD     </td></tr>
+ </table>
+ <HR>
+ <sup>1</sup> the exit slit width cannot be set on all monochromators, please refer to the beamline scientist.<br>
+ <sup>2</sup> setting the c-value affects only plane grating monochromators .
+ <p>
+  This command replaces some of the 'COM'-commands of the AMC-protocol by a 
+  more readable format.
+  <p>
+
+  When CheckBMT=1, the monochromator monitors the angular separation of grating and plane 
+  mirror and stops any motion if their separation falls below of a critical value. 
+  When CheckBMT=0, the software control is off, but a hardware protection
+  still prevents the collision of both elements.
+  <br> The actual status of this parameter is displayed in the EPICS control panel of the
+  monochromator.
+
+ <p>
+  Setting the diffraction order is most usefull at an undulator beamline.
+  When set to a value <> 1, the monochromator scans in the given order, 
+  while the undulator harmonic is not affected and stays at the corresponding 
+  first order energy.
+  Dipol beamlines take no advantage of this parameter.
+
+
+
+
+<H3><font color=green> Continuous Mode  </font></H3>
+
+ <H4> <font color=red><A Name="SSS">SSS, SSE, SSV, SR, SI</A></font> - Continuous mode commands</H4>
+
+ In the continuous mode, the monochromator moves continuously from a startenergy to
+ an endenergy. If no undulator is involved, the scan velocity is constant and can be
+ set by the user.<br>
+ Scans that require a simultaneous change of the undulator gap (to stay on top
+ of the harmonic) operate in a way where the gap-velocity of the undulator is constant.
+ The rate of energy change thereby increases when scanning from low photon energies to 
+ high photon energies. In that case the specified scan velocity accounts for the
+ lowest photon energy.
+ <p>
+ The continuous mode allows for a faster data aquisition and a significant reduction
+ in dead time.
+ This is of special importance whenever  samples suffer from radiation damage.
+
+<p>
+ The continuous mode requires a three step procedure
+ (set the parameters, check for consistency, run the scan)
+ which is described in the subsequent list:
+  
+ <ol>
+  <li> The start- and endenergy of the scan are set by the commands 
+       <font color = red>SSS</font> and <font color = red>SSE</font> in electronvolt. 
+       The velocity in electronvolt/second is set by the command <font color = red>SSV</font>. 
+       <p>
+  <li> The Scan Initialize command <font color = red>SI</font>  checks the 
+       values for startenergy, endenergy and velocity. If everything is 
+       consistent, a t is returned.<br> 
+       If on the other hand, an inconsistency appears, a f is returned. 
+       This may happen if, for example, the requested velocity is too high. 
+       Note that the maximum scan speed depends on the absolute photon energy
+       because of the nonlinear relation between angular speed of the drives 
+       and the corresponding change in photon energy<br>
+       If all  values are accepted, the monochromator calculates an acceleration
+       ramp, changes its status to <em>1 (RUNNING)</em> and moves to the start
+       of the ramp.
+       After arrival the status changes back to <em>0 (READY)</em>. 
+       <p>
+  <li> After the successful execution of the SI command, the command 
+       <font color = red>SR</font> (Scan Run) starts the continuous scan by 
+       accelerating to the designated velocity.
+       The status changes hereby from <em>0 (READY)</em> to <em>1 (RUNNING)</em>.
+       After passing the startenergy, the status changes to <em>3 (INSWEEP)</em>. 
+        <p>       
+  <li> The status stays at <em>3</em>  until the endenergy is passed.
+       Here it changes back to <em>1</em>, and, after the monochromator
+       has come to rest, to <em>0</em>.
+       <p>
+  <li> The scantime (time inbetween start- and endenergy) can be calculated by the values
+       of startenergy, endenergy and velocity.<br>
+       Currently this holds only for dipol beamlines, undulator beamlins speed up, as
+       the photon energy increases.
+       <p>
+  <li> Within the scan, the actual photon energy can be requested by the
+       GPO / GPE commands or by the fast energy readout command
+       ': '. 
+</ol>
+
+<H4> <font color=red><A Name="SGS">SGS, SGE, SGV </A></font>- Continuous mode readback commands</H4>
+
+ The commands report the values set for  startenergy (SGS), endenergy (SGE) and
+ scan velocity (SGV) set by the corresponding set-commands.
+
+
+<H3><font color=green> Miscellaneous</font></H3>
+
+ <H4> <font color=red><A Name="DMEAS">DMEAS</A></font> - Measure Ring Current</H4>
+  
+ The command can also be issued with the parameter 1.<br>
+ Currently (June 09), this command retrieves only the value of the ring current. 
+ The old BIND - command is therefore not necessary.
+
+ <H4> <font color=red><A Name="SBPC">SBPC</A></font> - Set Beam Position Control On/Off</H4>
+  
+ Beamlines with a beam position control (BPC) system as the PM3 or the UE46-PGM2
+ offer the posibility to switch the BPC on or off.
+ The first parameter specifies the branch (0 if there is only one branch)
+ the second turn the BPC ON (1)  or OFF (0). 
+
+ <H4> <font color=red><A Name="GPSD">GPSD</A></font> - Get Position Sensitive Device reading</H4>
+ This command reads prameters the PSD. The first parameter specifies the branch (i.e. PSD),
+ the second parameter specifies the parameter to be read.
+   <HR> 
+   <TABLE>
+   <tr><th> Parameter </th> <th COLSPAN =3>description</th></tr>
+   <tr><td> 0     </td> <td>Position  (mm)     </td></tr>
+   <tr><td> 1     </td> <td>Current 1 (Ampere) </td></tr>
+   <tr><td> 2     </td> <td>Current 2 (Ampere) </td></tr>
+   <tr><td> 3     </td> <td>Range of amplifier </td></tr>
+   </TABLE>
+ <HR>
+ 
+
+</HTML>
