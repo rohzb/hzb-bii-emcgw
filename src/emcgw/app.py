@@ -1,11 +1,6 @@
 import argparse
 import logging
 import yaml
-from .server import Server
-
-import argparse
-import logging
-import yaml
 import os
 from .server import Server, AccessList
 
