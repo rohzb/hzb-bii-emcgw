@@ -4,81 +4,71 @@ The EMC TCP Gateway allows users to control a monochromator from a different net
 
 The EMC TCP Gateway is designed to run on a border computer at the edge of the isolated network segment. It listens for incoming TCP connections from user computers and forwards those connections to the monochromator over TCP. The gateway can also filter clients by IP address, which can be useful for security reasons.
 
-## a few words about EMC protocol
+## About EMC protocol
 
 The EMC protocol is an extension of the AMC protocol, which is used to control monochromators. The EMC protocol adds new commands and features that are necessary for the continuous mode, where the monochromator moves continuously from a start- to an end-energy. The EMC protocol also allows the client to set and read various monochromator parameters and retrieve error messages after a failed request. Finally, the EMC protocol includes a fast energy readback command that allows the readout of the current photon energy with significantly increased speed.
 
-# Usage
+# How to use
 
-1. **Basic Usage:**
+To use the EMC TCP Gateway, you can either run the server with default settings or customize the server settings and specify allowed clients via command-line arguments. You can also configure the server using a YAML file.
 
-   To start the server with default settings, you can simply run the following command:
+Here are some examples:
 
-   ```bash
-   emcgw
-   ```
+### Example 1: Running the Server with Default Settings
+To start the server with default settings, you can simply run the `emcgw` command:
 
-2. **Specify Listen and Connect Hosts:**
+```bash
+emcgw
+```
 
-   You can specify the listen host and connect host using command-line options. For example:
+In this mode, the server will listen on the default host "localhost," port 8080, and connect to the target host "example.com" on port 80. The log level will be set to "INFO."
 
-   ```bash
-   emcgw -l 0.0.0.0 -p 8080 -r example.com -P 80
-   ```
+### Example 2: Custom Server Configuration
+You can customize the server settings and specify allowed clients via command-line arguments. Here's an example:
 
-3. **Verbosity Levels:**
+```bash
+emcgw -l localhost -p 8080 -r example.com -P 80 -L DEBUG -v -a 192.168.1.0/24 192.168.2.0/24
+```
 
-   Increase verbosity level for debugging using the `-v` option. For example:
+In this example:
+- `-l localhost` sets the host for the server to listen on to "localhost."
+- `-p 8080` sets the port to bind to as 8080.
+- `-r example.com` specifies the target host to connect to as "example.com."
+- `-P 80` sets the target port to connect to as 80.
+- `-L DEBUG` sets the log level to "DEBUG," providing more detailed logging.
+- `-v` increases the verbosity level, resulting in even more detailed logging (use multiple `-v` flags for higher verbosity).
+- `-a 192.168.1.0/24 192.168.2.0/24` specifies a list of allowed clients using IP/CIDR notation.
 
-   ```bash
-   emcgw -v             # Increase verbosity level (INFO)
-   emcgw -vv            # Increase verbosity level (DEBUG)
-   emcgw -vvv           # Increase verbosity level (TRACE)
-   ```
+### Example 3: Configuration via YAML File
+You can also configure the server using a YAML file. Create a configuration file, e.g., `config.yaml`, with the following contents:
 
-4. **Specify Configuration File:**
+```yaml
+listen_host: "localhost"
+listen_port: 8080
+connect_host: "example.com"
+connect_port: 80
+log_level: "INFO"
+allowed_clients:
+  - "192.168.1.0/24"
+  - "192.168.2.0/24"
+```
 
-   You can also specify a YAML configuration file with all the settings:
+Then, you can start the server by providing the path to the configuration file:
 
-   ```bash
-   emcgw -c config.yaml
-   ```
+```bash
+emcgw -c config.yaml
+```
 
-   Here is an example `config.yaml` file:
+The server will read the configuration settings from the YAML file, including the host to listen on, the port to bind to, the target host to connect to, the log level, and the list of allowed clients.
 
-   ```yaml
-   listen_host: 0.0.0.0
-   listen_port: 8080
-   connect_host: example.com
-   connect_port: 80
-   log_level: DEBUG
-   allowed_clients:
-     - 192.168.1.1
-     - "10.0.0.0/8"
-     - example.net
-   ```
+**Note:** You can also specify the access order in the YAML file if needed. If not specified, the default is "allow-first."
 
-5. **Multiple Configuration Files:**
-
-   You can provide multiple configuration files, and they will be read one after another:
-
-   ```bash
-   emcgw -c config1.yaml -c config2.yaml
-   ```
-
-6. **Custom Log Levels:**
-
-   You can use custom log levels when specifying the log level:
-
-   ```bash
-   emcgw -L VERBOSE      # Custom log level for more detailed information
-   emcgw -L TRACE        # Custom log level for maximum verbosity
-   ```
-
-Remember to customize these examples based on the actual options and features of your application.
+These examples demonstrate how to run and configure the `emcgw` server, either via command-line arguments or a YAML configuration file.
 
 
-## Installation
+# Installation
+
+**Note:** The instlation section is for the current "under development" version. ^
 
 Clone this repository and run `scripts/bootstrap.sh` to initialize the python virtual environment and set up needed dependencies.
 
@@ -87,7 +77,7 @@ Running tests with coverage:
 > pytest --cov=PROJECT-NAME-HERE tests/
 ```
 
-## Repository structure
+# Repository structure
 
 | path                             | description       |
 | ----------------------------     | ----------------- |
