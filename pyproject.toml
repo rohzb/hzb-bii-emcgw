@@ -16,6 +16,7 @@ classifiers = [
 
 dependencies = [
             'requests',
+            'pyyaml',  # Add pyyaml to the list of dependencies
           ]
 
 [build-system]
