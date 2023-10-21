@@ -15,6 +15,13 @@ MODULE_ROOT=$( cd ${SCRIPT_DIR} && cd .. && pwd )
 
 #sudo apt install python3 python3-venv
 
+# check if venv module available
+python3 -c "import ensurepip, venv" 2>/dev/null || { 
+    echo "ERROR: The venv module or its dependencies are not available."
+    echo "Please ensure that the required packages are installed." 
+    exit -1
+}
+
 # Create virtual environment, if needed
 if [[ ! -d ${MODULE_ROOT}/.venv ]];then
     python3 -m venv .venv || exit -1
