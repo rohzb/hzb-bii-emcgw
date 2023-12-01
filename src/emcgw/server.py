@@ -1,5 +1,6 @@
 import socket
 from .logger import logger
+import logging
 import ipaddress
 from .connection_handler import ConnectionHandler
 from typing import List, Union
@@ -133,7 +134,14 @@ class Server:
         """
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server_socket.bind((self.local_host, self.local_port))
+        
+        try:
+            server_socket.bind((self.local_host, self.local_port))
+        except socket.error as e:
+            logging.error(f"Failed to bind to {self.local_host}:{self.local_port} - {e}")
+            server_socket.close()
+            return
+
         server_socket.listen(0x40)
         logger.info(f"Server started on {self.local_host}:{self.local_port}")
         logger.info(f"Connect to {self.local_host}:{self.local_port} to access {self.remote_host}:{self.remote_port}")
