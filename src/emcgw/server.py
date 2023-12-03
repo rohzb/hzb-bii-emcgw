@@ -1,6 +1,5 @@
 import socket
 from .logger import logger
-import logging
 import ipaddress
 from .connection_handler import ConnectionHandler
 from typing import List, Union
@@ -138,7 +137,7 @@ class Server:
         try:
             server_socket.bind((self.local_host, self.local_port))
         except socket.error as e:
-            logging.error(f"Failed to bind to {self.local_host}:{self.local_port} - {e}")
+            logger.error(f"Failed to bind to {self.local_host}:{self.local_port} - {e}")
             server_socket.close()
             return
 
